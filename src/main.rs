@@ -1,3 +1,6 @@
+mod deck; //Import the deck module
+
 fn main() {
-    println!("Hello, world!");
+    let deck = deck::Deck::new()
+    println!("{:?}", deck);
 }
