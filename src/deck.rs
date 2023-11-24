@@ -69,7 +69,7 @@ impl Deck{
         // create a standard 52 card deck   
         let shoe: Vec<Card> = iproduct!(1..=13, Suit::iter()) //iterating over Cartesian product
             .map(|(v, s)| Card{value:v, suit:s}) //calling the Card constructor on each pair of value and suit
-            .collect(); //collecting the individual Cards into a Vec, for the 
+            .collect(); //collecting the individual Cards into a Vec, for the Deck constructor
             Self{shoe}
         }
     pub fn shuffle(mut self) -> Self{
