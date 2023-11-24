@@ -32,6 +32,7 @@ pub fn hash_cards(cards:Vec<Card>) -> CardHash {
 }
 
 pub fn is_hash_flushable(card_hash: &CardHash) -> Result<bool, &'static str> {
+    // takes a reference to a CardHash, 
     for (&key, &value) in &card_hash.suit_hash {
         // iterate over all key, value pairs, return true if there is a suit with more than 5
         if let deck::Suit::(_)= key {
@@ -41,6 +42,34 @@ pub fn is_hash_flushable(card_hash: &CardHash) -> Result<bool, &'static str> {
             }
         else {
             Err{"The CardHash tried to pass off an invalid suit."}
+        }
+    }
+    Ok(false)
+}
+
+pub fn is_hand_straightable(card_hash: &CardHash) -> Result<bool, &'static str> {
+    let mut ranks: Vec<usize> = card_hash.suit_hash.keys().copied().collect();
+    ranks.sort(); // Sort the ranks
+
+    let mut straight_counter = 1;
+
+    for window in ranks.windows(2) {
+        if window[1] - window[0] == 1 {
+            straight_counter += 1;
+        } else {
+            straight_counter = 1; // Reset the counter if not sequential
+        }
+
+        if straight_counter >= 5 {
+            return Ok(true);
+        }
+    }
+    if straight_counter == 4{
+        if ranks.contains(&1){
+            return Ok(true)
+        }
+        else{
+            return Ok(false)
         }
     }
     Ok(false)
