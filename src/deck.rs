@@ -7,7 +7,7 @@ use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
 #[derive(Debug)]
-struct BoundError(i8, i8, i8);
+pub struct BoundError(i8, i8, i8);
 
 impl Error for BoundError {
     fn description(&self) -> &str {
@@ -67,9 +67,9 @@ pub struct Deck{
 impl Deck{
     pub fn new() -> Self{
         // create a standard 52 card deck   
-        let mut shoe: Vec<Card> = iproduct!(1..=13, Suit::iter())
-            .map(|(v, s)| Card{value:v, suit:s})
-            .collect();
+        let shoe: Vec<Card> = iproduct!(1..=13, Suit::iter()) //iterating over Cartesian product
+            .map(|(v, s)| Card{value:v, suit:s}) //calling the Card constructor on each pair of value and suit
+            .collect(); //collecting the individual Cards into a Vec, for the 
             Self{shoe}
         }
     pub fn shuffle(mut self) -> Self{
