@@ -11,7 +11,7 @@ pub struct BoundError(i8, i8, i8);
 
 impl Error for BoundError {
     fn description(&self) -> &str {
-        "Raised when value is out of known bounds."
+        "Raised when rank is out of known bounds."
     }
     fn cause(&self) -> Option<&dyn Error> {
         None // would include a derivative error here if it existed, but this is on the usSer/calling library.
@@ -38,18 +38,18 @@ pub enum Suit {
 
 #[derive(Debug)]
 pub struct Card {
-    pub value: i8,
+    pub rank: i8,
     pub suit: Suit,
 }
 
 impl Card{
-    /// This function creates a new card with the value and suit specified, 
-    /// and returns a BoundError if the value is not a valid integer.
-    pub fn new(value: i8, suit:Suit) -> Result<Self, BoundError>{
-        if value >= 1 && value <= 13 {
-            Ok(Self{value, suit})
+    /// This function creates a new card with the rank and suit specified, 
+    /// and returns a BoundError if the rank is not a valid integer.
+    pub fn new(rank: i8, suit:Suit) -> Result<Self, BoundError>{
+        if rank >= 1 && rank <= 13 {
+            Ok(Self{rank, suit})
         } else {
-            Err(BoundError(value, 1, 13))
+            Err(BoundError(rank, 1, 13))
         }
     }
 }
@@ -68,7 +68,7 @@ impl Deck{
     pub fn new() -> Self{
         // create a standard 52 card deck   
         let shoe: Vec<Card> = iproduct!(1..=13, Suit::iter()) //iterating over Cartesian product
-            .map(|(v, s)| Card{value:v, suit:s}) //calling the Card constructor on each pair of value and suit
+            .map(|(v, s)| Card{rank:v, suit:s}) //calling the Card constructor on each pair of rank and suit
             .collect(); //collecting the individual Cards into a Vec, for the Deck constructor
             Self{shoe}
         }
