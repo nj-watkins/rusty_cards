@@ -11,7 +11,7 @@ pub struct BoundError(i8, i8, i8);
 
 impl Error for BoundError {
     fn description(&self) -> &str {
-        "Raised when rank is out of known bounds."
+        "Raised when value is out of known bounds."
     }
     fn cause(&self) -> Option<&dyn Error> {
         None // would include a derivative error here if it existed, but this is on the usSer/calling library.
@@ -30,10 +30,10 @@ impl fmt::Display for BoundError {
 
 #[derive(Debug, EnumIter)]
 pub enum Suit {
-    Heart,
-    Diamond,
-    Club,
-    Spade,
+    Hearts,
+    Diamonds,
+    Clubs,
+    Spades,
 }
 
 #[derive(Debug)]
@@ -51,6 +51,12 @@ impl Card{
         } else {
             Err(BoundError(rank, 1, 13))
         }
+    }
+}
+
+impl AsRef<Card> for Card {
+    fn as_ref(&self) -> &Card {
+        self
     }
 }
 
@@ -78,4 +84,24 @@ impl Deck{
         // shuffle is a method provided by SliceRandom
         self
     }
+}
+
+trait CardCollector {
+    fn collect_cards(&self) -> Vec<&Card>;
+}
+
+// Implement the trait for tuples of cards with any length (up to a limit)
+macro_rules! implement_tuple_collector {
+    ($($n:ident),*) => {
+        impl<$($n),*> CardCollector for ($($n),*)
+        where
+            $($n: AsRef<Card>),*
+        {
+            fn collect_cards(&self) -> Vec<&Card> {
+                let mut collected_cards = Vec::new();
+                $(collected_cards.push(self.$n.as_ref());)*
+                collected_cards
+            }
+        }
+    };
 }

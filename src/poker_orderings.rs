@@ -19,7 +19,7 @@ pub struct CardHash{
     suit_hash: HashMap<Suit, i8>
 }
 
-pub fn hash_cards(cards:Vec<Card>) -> CardHash {
+pub fn hash_cards(cards:Vec<&Card>) -> CardHash {
     let mut rank_hash: HashMap<i8, i8>
     let mut suit_hash: HashMap<Suit, i8>
     for card in &cards:
@@ -97,7 +97,7 @@ fn flush_suit(card_hash: &CardHash) -> Result<Suit, &'static str> {
     }
 }
 
-pub fn identify_hand_class(cards:Vec<Card>) -> HandClass{
+pub fn identify_hand_class(cards:Vec<&Card>) -> HandClass{
     let card_hash = hash_cards(cards)
     // create a hash map of the cards to make hand identification easier
     let can_straight = is_hand_straightable(&card_hash)
@@ -125,7 +125,7 @@ pub fn identify_hand_class(cards:Vec<Card>) -> HandClass{
     }
 }
 
-fun straight_or_royal_flush(cards: Vec<Card>, card_hash: &CardHash) -> Option<HandClass> {
+fun straight_or_royal_flush(cards: Vec<&Card>, card_hash: &CardHash) -> Option<HandClass> {
     // Check if the cards form a straight or royal flush, return relevant variant if so
     let flush_suit = flush_suit(&card_hash)
         // only considering games where players have at most one valid flush
@@ -176,5 +176,31 @@ fn best_group_class(card_hash : &CardHash) -> Result<HandClass, &'static str>{
         }
         1 => Ok(HighCard),
         Err{"There are no ranks with positive value in the card hash?"}
+    }
+}
+
+fn create_hand_vector(player_hand: &PlayerHand, community: &Community) -> Vec<Card>{
+    let mut hand_vector: Vec<&Card> = vec![];
+    hand_vector.extend(player_hand.collect_cards());
+    hand_vector.extend(community.collect_cards());
+    hand_vector
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+    #[test]
+    fn test_card_hash {
+        let ace_hearts = Card{rank:1, suit: Hearts}
+        let two_hearts = Card{rank:2, suit: Hearts}
+        let three_hearts = Card{rank:3, suit: Hearts}
+        let four_hearts = Card{rank:4, suit: Hearts}
+        let five_hearts = Card{rank:5, suit: Hearts}
+        let four_clubs = Card{rank:4, suit: Clubs}
+        let four_diamonds = Card{rank:4, suit:Diamonds}
+        let four_spades = Card{rank:4, suit: Spades}
+        let ace_spades = Card{rank:1, suit: Spades}
+        // ^-- Build cards for testing hand id
     }
 }
