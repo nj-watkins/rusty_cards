@@ -41,16 +41,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "krusty_bluffer"
-version = "0.1.0"
-dependencies = [
- "itertools",
- "rand",
- "strum",
- "strum_macros",
-]
-
-[[package]]
 name = "libc"
 version = "0.2.148"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -115,6 +105,16 @@ name = "rustversion"
 version = "1.0.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7ffc183a10b4478d04cbbbfc96d0873219d962dd5accaff2ffbd4ceb7df837f4"
+
+[[package]]
+name = "rusty_poker"
+version = "0.1.0"
+dependencies = [
+ "itertools",
+ "rand",
+ "strum",
+ "strum_macros",
+]
 
 [[package]]
 name = "strum"

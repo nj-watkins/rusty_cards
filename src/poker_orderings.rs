@@ -1,8 +1,12 @@
-use std:collections::HashMap;
+mod deck;
+mod texas_holdem;
+
+use std::collections::HashMap;
 use crate::texas_holdem::Community;
 use crate::texas_holdem::PlayerHand;
 use crate::deck::Card;
 use crate::deck::Suit;
+use crate::deck::CardCollector;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum HandClass{
@@ -20,25 +24,26 @@ pub enum HandClass{
 
 pub struct CardHash{
     rank_hash: HashMap<i8, i8>,
-    suit_hash: HashMap<Suit, i8>
+    suit_hash: HashMap<Suit, i8>,
 }
 
 pub fn hash_cards(cards:Vec<&Card>) -> CardHash {
-    let mut rank_hash: HashMap<i8, i8>
-    let mut suit_hash: HashMap<Suit, i8>
-    for card in &cards:
+    let mut rank_hash: HashMap<i8, i8>;
+    let mut suit_hash: HashMap<Suit, i8>;
+    for card in &cards{
         // iterate over each card in the cards vector
         *rank_hash.entry(card.rank.clone()).or_insert(0) += 1;
         *suit_hash.entry(card.suit.clone()).or_insert(0) += 1;
         // if the card's rank or suit doesn't exist in the HashMap already,
         // make a clone and set its corresponding counter to 0 (then iterate to 1)
+    }
     CardHash{rank_hash, suit_hash}
 }
 
 pub fn is_hand_flushable(card_hash: &CardHash) -> Result<bool, &'static str> {
     for (&key, &value) in &card_hash.suit_hash {
         // iterate over all key-value pairs, return true if there is a suit with more than 5
-        if let crate:deck::Suit::(_) = key {
+        if let crate::deck::Suit::(_) = key {
             if value >= 5 {
                 return Ok(true);
             } else {
@@ -115,19 +120,19 @@ pub fn identify_hand_class(cards:Vec<&Card>) -> Result<HandClass, &'static str>{
             return Err("Something errant!");
         }
 
-    }
+    };
     let can_straight = match can_straight{
         Ok(value) => value,
         Err(err) => {
             println!("Error occurred: {}", err);
             return Err("Something errant!");
         }
-    }    
+    };  
     if can_straight && can_flush {
         // check if straight flush/royal flush
         let handclass = straight_or_royal_flush(cards, &card_hash);     
-        if handclass is Some {
-            return Ok(handclass);
+        if let Some(hand) = handclass  {
+            return Ok(hand);
         }         
     }
     let groupclass = match groupclass{
@@ -164,11 +169,12 @@ fn straight_or_royal_flush(cards: Vec<&Card>, card_hash: &CardHash) -> Option<Ha
     // only considering games where players have at most one valid flush
     // filter the cards down to only the cards of the flush suit
     let mut flush_cards: Vec<&Card> = cards.iter()
-                                           .filter(|*card| *card.suit == flush_suit)
+                                           .filter(|&&card| card.suit == flush_suit)
+                                           .copied()
                                            .collect();
     //iterate over cards, use a closure (anonymous function) to filter down to the flush suit
     flush_cards.sort_by_key(|&card| card.rank); // sort the cards to check for a straight
-    let mut straight_counter:u8 = 0
+    let mut straight_counter:u8 = 0;
     for window in flush_cards.windows(2) {
         if window[1].rank - window[0].rank == 1{
             straight_counter += 1;
@@ -183,9 +189,8 @@ fn straight_or_royal_flush(cards: Vec<&Card>, card_hash: &CardHash) -> Option<Ha
                 return Some(HandClass::RoyalFlush);
             }
             None
-        }
-        _ if straight_counter >= 5 => Some(HandClass::StraightFlush)
-        _ => None
+        },
+        _ => Some(HandClass::StraightFlush),
     }
 }
 
@@ -244,12 +249,12 @@ mod tests {
             river: four_hearts,
         };
         let test_hand_one = (five_hearts, four_spades);
-        let test_hand_oneone = create_hand_vector(test_hand_one, test_community_one);
+        let test_hand_oneone = create_hand_vector(&test_hand_one, &test_community_one);
         let test_handclass_oneone = identify_hand_class(test_hand_oneone);
         assert_eq!(test_handclass_oneone, Ok(HandClass::StraightFlush));
 
         let test_hand_two = (four_clubs, four_diamonds);
-        let test_hand_twoone = create_hand_vector(test_hand_two, test_community_one);
+        let test_hand_twoone = create_hand_vector(&test_hand_two, &test_community_one);
         let test_handclass_twoone = identify_hand_class(test_hand_twoone);
         assert_eq!(test_handclass_twoone, Ok(HandClass::TwoPair));
     }

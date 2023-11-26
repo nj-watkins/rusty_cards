@@ -28,7 +28,7 @@ impl fmt::Display for BoundError {
     }
 }
 
-#[derive(Debug, Clone, Copy, EnumIter, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, EnumIter, Hash, PartialEq, Eq)]
 pub enum Suit {
     Hearts,
     Diamonds,
@@ -93,7 +93,22 @@ pub trait CardCollector {
 // Implement the trait for tuples of cards with any length (up to a limit)
 macro_rules! implement_tuple_collector {
     ($($n:ident),*) => {
-        impl<$($n),*> CardCollector for ($($n),*)
+        pub impl<$($n),*> CardCollector for ($($n),*)
+        where
+            $($n: AsRef<Card>),*
+        {
+            fn collect_cards(&self) -> Vec<&Card> {
+                let mut collected_cards = Vec::new();
+                $(collected_cards.push(self.$n.as_ref());)*
+                collected_cards
+            }
+        }
+    };
+}
+
+macro_rules! implement_ref_tuple_collector {
+    ($($n:ident),*) => {
+        pub impl<'a, $($n),*> CardCollector for (&'a $($n),*)
         where
             $($n: AsRef<Card>),*
         {
