@@ -1,4 +1,8 @@
-mod deck;
+use std:collections::HashMap;
+use crate::texas_holdem::Community;
+use crate::texas_holdem::PlayerHand;
+use crate::deck::Card;
+use crate::deck::Suit;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum HandClass{
@@ -32,23 +36,23 @@ pub fn hash_cards(cards:Vec<&Card>) -> CardHash {
 }
 
 pub fn is_hand_flushable(card_hash: &CardHash) -> Result<bool, &'static str> {
-    // takes a reference to a CardHash, 
     for (&key, &value) in &card_hash.suit_hash {
-        // iterate over all key, value pairs, return true if there is a suit with more than 5
-        if let deck::Suit::(_)= key {
-        // if let is a special pattern matching capability in Rust
-            if value >= 5: {
-                return Ok(true)
+        // iterate over all key-value pairs, return true if there is a suit with more than 5
+        if let crate:deck::Suit::(_) = key {
+            if value >= 5 {
+                return Ok(true);
+            } else {
+                return Err("The CardHash tried to pass off an invalid suit.");
             }
-        else {
-            Err{"The CardHash tried to pass off an invalid suit."}
         }
     }
     Ok(false)
 }
 
 pub fn is_hand_straightable(card_hash: &CardHash) -> Result<bool, &'static str> {
-    let mut ranks: Vec<usize> = card_hash.suit_hash.keys().copied().collect();
+    let mut ranks: Vec<i8> = card_hash.rank_hash.keys()
+                                                .copied()
+                                                .collect();
     ranks.sort(); // Sort the ranks
     let mut straight_counter = 1;
 
@@ -97,61 +101,92 @@ fn flush_suit(card_hash: &CardHash) -> Result<Suit, &'static str> {
     }
 }
 
-pub fn identify_hand_class(cards:Vec<&Card>) -> HandClass{
+pub fn identify_hand_class(cards:Vec<&Card>) -> Result<HandClass, &'static str>{
     let card_hash = hash_cards(cards)
     // create a hash map of the cards to make hand identification easier
     let can_straight = is_hand_straightable(&card_hash)
     let can_flush = is_hand_flushable(&card_hash)
     let groupclass = best_group_class(&card_hash)
     // check for straight and flush independently
+    let can_flush = match can_flush{
+        Ok(value) => value,
+        Err(err) => {
+            println!("Error occurred: {}", err);
+            return Err("Something errant!");
+        }
+
+    }
+    let can_straight = match can_straight{
+        Ok(value) => value,
+        Err(err) => {
+            println!("Error occurred: {}", err);
+            return Err("Something errant!");
+        }
+    }    
     if can_straight && can_flush {
         // check if straight flush/royal flush
         let handclass = straight_or_royal_flush(cards, &card_hash)     
         if handclass is Some {
-            return handclass
+            return Ok(handclass)
         }         
     }
-    if groupclass == FullHouse{
-        FullHouse
+    let groupclass = match groupclass{
+        Ok(value) => value,
+        Err(err) => {
+            println!("Error occurred: {}", err);
+            return Err("Something errant!");
+        }
     }
-    else if can_flush{
-        Flush
+    if groupclass == HandClass::FullHouse{
+        Ok(HandClass::FullHouse)
     }
-    else if can_straight{
-        Straight
+    else if can_flush {
+        Ok(HandClass::Flush)
+    }
+    else if can_straight {
+        Ok(HandClass::Straight)
     }
     else{
-        groupclass
+        Ok(groupclass)
     }
 }
 
-fun straight_or_royal_flush(cards: Vec<&Card>, card_hash: &CardHash) -> Option<HandClass> {
+fn straight_or_royal_flush(cards: Vec<&Card>, card_hash: &CardHash) -> Option<HandClass> {
     // Check if the cards form a straight or royal flush, return relevant variant if so
     let flush_suit = flush_suit(&card_hash)
-        // only considering games where players have at most one valid flush
-        // filter the cards down to only the cards of the flush suit
-        let mut flush_cards = cards.iter().filter(|card| card.suit == flush_suit).collect()
-        //iterate over cards, use a closure (anonymous function) to filter down to the flush suit
-        flush_cards.sort_by_key(|&card| card.rank); // sort the cards to check for a straight
-        let mut straight_counter:u8 = 0
-        for window in flush_cards.windows(2) {
-            if window[1].rank - window[0].rank == 1{
-                straight_counter += 1;
-            }
-            else{
-                straight_counter = 0;
-            }
+    let flush_suit = match flush_suit {
+        Ok(value) => value,
+        Err(err) => {
+            println!("An error has occured: {}", err);
+            return None;
         }
-        match straight_counter {
-            4 => {
-                if flush_cards[0] == 1 {
-                    Some(RoyalFlush)
-                }
-                None
-            }
-            _ if straight_counter >= 5 => Some(StraightFlush)
-            _ => None
+    }    
+    // only considering games where players have at most one valid flush
+    // filter the cards down to only the cards of the flush suit
+    let mut flush_cards: Vec<&Card> = cards.iter()
+                                           .filter(|*card| *card.suit == flush_suit)
+                                           .collect();
+    //iterate over cards, use a closure (anonymous function) to filter down to the flush suit
+    flush_cards.sort_by_key(|&card| card.rank); // sort the cards to check for a straight
+    let mut straight_counter:u8 = 0
+    for window in flush_cards.windows(2) {
+        if window[1].rank - window[0].rank == 1{
+            straight_counter += 1;
         }
+        else{
+            straight_counter = 0;
+        }
+    }
+    match straight_counter {
+        4 => {
+            if flush_cards[0].rank == 1 {
+                return Some(HandClass::RoyalFlush);
+            }
+            None
+        }
+        _ if straight_counter >= 5 => Some(HandClass::StraightFlush)
+        _ => None
+    }
 }
 
 fn best_group_class(card_hash : &CardHash) -> Result<HandClass, &'static str>{
@@ -167,19 +202,19 @@ fn best_group_class(card_hash : &CardHash) -> Result<HandClass, &'static str>{
     match count {
         4 => Ok(FourOfAKind),
         3 => match next_max_count {
-            _ >= 2 => Ok(FullHouse),
-            _ => Ok(ThreeOfAKind),
+            _ >= 2 => Ok(HandClass::FullHouse),
+            _ => Ok(HandClass::ThreeOfAKind),
         },
         2 => match next_max_count {
-            2 => Ok(TwoPair),
-            _ => Ok(Pair),
+            2 => Ok(HandClass::TwoPair),
+            _ => Ok(HandClass::Pair),
         }
-        1 => Ok(HighCard),
+        1 => Ok(HandClass::HighCard),
         Err{"There are no ranks with positive value in the card hash?"}
     }
 }
 
-fn create_hand_vector(player_hand: &PlayerHand, community: &Community) -> Vec<Card>{
+fn create_hand_vector(player_hand: &PlayerHand, community: &Community) -> Vec<&Card>{
     let mut hand_vector: Vec<&Card> = vec![];
     hand_vector.extend(player_hand.collect_cards());
     hand_vector.extend(community.collect_cards());
@@ -189,18 +224,32 @@ fn create_hand_vector(player_hand: &PlayerHand, community: &Community) -> Vec<Ca
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+    use crate::deck::Suit::*;
     #[test]
-    fn test_card_hash {
-        let ace_hearts = Card{rank:1, suit: Hearts}
-        let two_hearts = Card{rank:2, suit: Hearts}
-        let three_hearts = Card{rank:3, suit: Hearts}
-        let four_hearts = Card{rank:4, suit: Hearts}
-        let five_hearts = Card{rank:5, suit: Hearts}
-        let four_clubs = Card{rank:4, suit: Clubs}
-        let four_diamonds = Card{rank:4, suit:Diamonds}
-        let four_spades = Card{rank:4, suit: Spades}
-        let ace_spades = Card{rank:1, suit: Spades}
+    fn test_card_hash() {
+        let ace_hearts = Card{rank:1, suit: Hearts};
+        let two_hearts = Card{rank:2, suit: Hearts};
+        let three_hearts = Card{rank:3, suit: Hearts};
+        let four_hearts = Card{rank:4, suit: Hearts};
+        let five_hearts = Card{rank:5, suit: Hearts};
+        let four_clubs = Card{rank:4, suit: Clubs};
+        let four_diamonds = Card{rank:4, suit: Diamonds};
+        let four_spades = Card{rank:4, suit: Spades};
+        let ace_spades = Card{rank:1, suit: Spades};
         // ^-- Build cards for testing hand id
+        let test_community_one = Community{
+            flop: (ace_hearts, ace_spades, two_hearts),
+            turn: three_hearts
+            river: four_hearts
+        };
+        let test_hand_one = (five_hearts, four_spades);
+        let test_hand_oneone = create_hand_vector(test_hand_one, test_community_one);
+        let test_handclass_oneone = identify_hand_class(test_hand_oneone);
+        assert_eq!(test_handclass_oneone, Ok(HandClass::StraightFlush));
+
+        let test_hand_two = (four_clubs, four_diamonds);
+        let test_hand_twoone = create_hand_vector(test_hand_two, test_community_one);
+        let test_handclass_twoone = identify_hand_class(test_hand_twoone);
+        assert_eq!(test_handclass_twoone, Ok(HandClass::TwoPair));
     }
 }

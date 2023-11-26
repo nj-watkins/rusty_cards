@@ -28,7 +28,7 @@ impl fmt::Display for BoundError {
     }
 }
 
-#[derive(Debug, EnumIter)]
+#[derive(Debug, Clone, Copy, EnumIter, PartialEq, Eq)]
 pub enum Suit {
     Hearts,
     Diamonds,
