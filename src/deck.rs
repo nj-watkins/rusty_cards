@@ -86,7 +86,7 @@ impl Deck{
     }
 }
 
-trait CardCollector {
+pub trait CardCollector {
     fn collect_cards(&self) -> Vec<&Card>;
 }
 

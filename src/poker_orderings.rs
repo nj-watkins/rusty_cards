@@ -102,11 +102,11 @@ fn flush_suit(card_hash: &CardHash) -> Result<Suit, &'static str> {
 }
 
 pub fn identify_hand_class(cards:Vec<&Card>) -> Result<HandClass, &'static str>{
-    let card_hash = hash_cards(cards)
+    let card_hash = hash_cards(cards);
     // create a hash map of the cards to make hand identification easier
-    let can_straight = is_hand_straightable(&card_hash)
-    let can_flush = is_hand_flushable(&card_hash)
-    let groupclass = best_group_class(&card_hash)
+    let can_straight = is_hand_straightable(&card_hash);
+    let can_flush = is_hand_flushable(&card_hash);
+    let groupclass = best_group_class(&card_hash);
     // check for straight and flush independently
     let can_flush = match can_flush{
         Ok(value) => value,
@@ -125,9 +125,9 @@ pub fn identify_hand_class(cards:Vec<&Card>) -> Result<HandClass, &'static str>{
     }    
     if can_straight && can_flush {
         // check if straight flush/royal flush
-        let handclass = straight_or_royal_flush(cards, &card_hash)     
+        let handclass = straight_or_royal_flush(cards, &card_hash);     
         if handclass is Some {
-            return Ok(handclass)
+            return Ok(handclass);
         }         
     }
     let groupclass = match groupclass{
@@ -136,31 +136,31 @@ pub fn identify_hand_class(cards:Vec<&Card>) -> Result<HandClass, &'static str>{
             println!("Error occurred: {}", err);
             return Err("Something errant!");
         }
-    }
+    };
     if groupclass == HandClass::FullHouse{
-        Ok(HandClass::FullHouse)
+        return Ok(HandClass::FullHouse);
     }
     else if can_flush {
-        Ok(HandClass::Flush)
+        return Ok(HandClass::Flush);
     }
     else if can_straight {
-        Ok(HandClass::Straight)
+        return Ok(HandClass::Straight);
     }
     else{
-        Ok(groupclass)
+        return Ok(groupclass);
     }
 }
 
 fn straight_or_royal_flush(cards: Vec<&Card>, card_hash: &CardHash) -> Option<HandClass> {
     // Check if the cards form a straight or royal flush, return relevant variant if so
-    let flush_suit = flush_suit(&card_hash)
+    let flush_suit = flush_suit(&card_hash);
     let flush_suit = match flush_suit {
         Ok(value) => value,
         Err(err) => {
             println!("An error has occured: {}", err);
             return None;
         }
-    }    
+    };    
     // only considering games where players have at most one valid flush
     // filter the cards down to only the cards of the flush suit
     let mut flush_cards: Vec<&Card> = cards.iter()
@@ -190,19 +190,20 @@ fn straight_or_royal_flush(cards: Vec<&Card>, card_hash: &CardHash) -> Option<Ha
 }
 
 fn best_group_class(card_hash : &CardHash) -> Result<HandClass, &'static str>{
-    let mut max_count:u8 = 0
-    let mut next_max_count:u8 = 0
-    for &count in &card_hash.rank_hash.values()
+    let mut max_count:i8 = 0;
+    let mut next_max_count:i8 = 0;
+    for &count in card_hash.rank_hash.values() {
         if count > max_count {
             max_count = count;
             next_max_count = max_count;
         } else if count > next_max_count {
             next_max_count = count;
         }
-    match count {
-        4 => Ok(FourOfAKind),
+    }
+    match max_count {
+        4 => Ok(HandClass::FourOfAKind),
         3 => match next_max_count {
-            _ >= 2 => Ok(HandClass::FullHouse),
+            2..=std::i8::MAX => Ok(HandClass::FullHouse),
             _ => Ok(HandClass::ThreeOfAKind),
         },
         2 => match next_max_count {
@@ -210,11 +211,11 @@ fn best_group_class(card_hash : &CardHash) -> Result<HandClass, &'static str>{
             _ => Ok(HandClass::Pair),
         }
         1 => Ok(HandClass::HighCard),
-        Err{"There are no ranks with positive value in the card hash?"}
+        _ => Err("There are no ranks with positive value in the card hash?")
     }
 }
 
-fn create_hand_vector(player_hand: &PlayerHand, community: &Community) -> Vec<&Card>{
+fn create_hand_vector<'a>(player_hand: &'a PlayerHand, community: &'a Community) -> Vec<&'a Card>{
     let mut hand_vector: Vec<&Card> = vec![];
     hand_vector.extend(player_hand.collect_cards());
     hand_vector.extend(community.collect_cards());
@@ -239,8 +240,8 @@ mod tests {
         // ^-- Build cards for testing hand id
         let test_community_one = Community{
             flop: (ace_hearts, ace_spades, two_hearts),
-            turn: three_hearts
-            river: four_hearts
+            turn: three_hearts,
+            river: four_hearts,
         };
         let test_hand_one = (five_hearts, four_spades);
         let test_hand_oneone = create_hand_vector(test_hand_one, test_community_one);

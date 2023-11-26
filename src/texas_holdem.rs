@@ -1,3 +1,6 @@
+use crate::deck::Card
+use crate::deck::CardCollector
+
 #[derive(Debug)]
 pub type PlayerHand = (Card, Card);
 implement_tuple_collector!(Card, Card);
@@ -23,5 +26,3 @@ impl CardCollector for Community {
         collected_cards
     }
 }
-
-
