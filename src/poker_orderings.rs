@@ -1,5 +1,5 @@
-mod deck;
-mod texas_holdem;
+//mod deck;
+//mod texas_holdem;
 
 use std::collections::HashMap;
 use crate::texas_holdem::Community;
@@ -41,17 +41,24 @@ pub fn hash_cards(cards:Vec<&Card>) -> CardHash {
 }
 
 pub fn is_hand_flushable(card_hash: &CardHash) -> Result<bool, &'static str> {
+    let mut has_flush_suit = false;
+
     for (&key, &value) in &card_hash.suit_hash {
-        // iterate over all key-value pairs, return true if there is a suit with more than 5
-        if let crate::deck::Suit::(_) = key {
-            if value >= 5 {
-                return Ok(true);
-            } else {
-                return Err("The CardHash tried to pass off an invalid suit.");
+        // iterate over all key-value pairs, set has_flush_suit if there is a suit with more than 5
+        match key {
+            // TODO: complain about this syntax on a Rust forum?
+            crate::deck::Suit::Hearts | crate::deck::Suit::Diamonds | crate::deck::Suit::Clubs | crate::deck::Suit::Spades => {
+                if value >= 5 {
+                    has_flush_suit = true;
+                    break;
+                } else {
+                    has_flush_suit = false;
+                }
             }
+            _ => return Err("The card hash had an unaccounted for suit type"),
         }
     }
-    Ok(false)
+    Ok(has_flush_suit)
 }
 
 pub fn is_hand_straightable(card_hash: &CardHash) -> Result<bool, &'static str> {

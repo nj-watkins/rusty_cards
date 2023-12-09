@@ -91,6 +91,7 @@ pub trait CardCollector {
 }
 
 // Implement the trait for tuples of cards with any length (up to a limit)
+#[macro_export]
 macro_rules! implement_tuple_collector {
     ($($n:ident),*) => {
         pub impl<$($n),*> CardCollector for ($($n),*)
@@ -106,11 +107,12 @@ macro_rules! implement_tuple_collector {
     };
 }
 
+#[macro_export]
 macro_rules! implement_ref_tuple_collector {
     ($($n:ident),*) => {
-        pub impl<'a, $($n),*> CardCollector for (&'a $($n),*)
+        impl<$($n),*> CardCollector for &($( $n, )*)
         where
-            $($n: AsRef<Card>),*
+            $( $n: AsRef<Card>, )*
         {
             fn collect_cards(&self) -> Vec<&Card> {
                 let mut collected_cards = Vec::new();
@@ -120,3 +122,19 @@ macro_rules! implement_ref_tuple_collector {
         }
     };
 }
+
+
+// macro_rules! implement_ref_tuple_collector {
+//     ($($n:ident),*) => {
+//         pub impl<'a, $($n),*> CardCollector for (&'a $($n),*)
+//         where
+//             $($n: AsRef<Card>),*
+//         {
+//             fn collect_cards(&self) -> Vec<&Card> {
+//                 let mut collected_cards = Vec::new();
+//                 $(collected_cards.push(self.$n.as_ref());)*
+//                 collected_cards
+//             }
+//         }
+//     };
+// }
