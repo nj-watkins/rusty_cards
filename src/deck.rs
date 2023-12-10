@@ -107,22 +107,53 @@ macro_rules! implement_tuple_collector {
     };
 }
 
+// #[macro_export]
+// macro_rules! implement_ref_tuple_collector {
+//     ($($n:ident),*) => {
+//         impl<$($n),*> CardCollector for &($( $n, )*)
+//         where
+//             $( $n: AsRef<Card>, )*
+//         {
+//             fn collect_cards(&self) -> Vec<&Card> {
+//                 let mut collected_cards = Vec::new();
+//                 $(collected_cards.push(self.$n.as_ref());)*
+//                 collected_cards
+//             }
+//         }
+//     };
+// }
+
+// #[macro_export]
+// macro_rules! implement_ref_tuple_collector {
+//     ($($n:ident),*) => {
+//         impl<$($n),*> CardCollector for &($( $n, )*)
+//         where
+//             $( $n: AsRef<crate::deck::Card>, )*
+//         {
+//             fn collect_cards(&self) -> Vec<&crate::deck::Card> {
+//                 let mut collected_cards = Vec::new();
+//                 $(collected_cards.push(self.$n.as_ref());)*
+//                 collected_cards
+//             }
+//         }
+//     };
+// }
+
 #[macro_export]
 macro_rules! implement_ref_tuple_collector {
-    ($($n:ident),*) => {
-        impl<$($n),*> CardCollector for &($( $n, )*)
+    ($($T:ident),*) => {
+        impl<$($T),*> CardCollector for &($( $T, )*)
         where
-            $( $n: AsRef<Card>, )*
+            $( $T: AsRef<crate::deck::Card>, )*
         {
-            fn collect_cards(&self) -> Vec<&Card> {
+            fn collect_cards(&self) -> Vec<&crate::deck::Card> {
                 let mut collected_cards = Vec::new();
-                $(collected_cards.push(self.$n.as_ref());)*
+                $(collected_cards.push(self.$T.as_ref());)*
                 collected_cards
             }
         }
     };
 }
-
 
 // macro_rules! implement_ref_tuple_collector {
 //     ($($n:ident),*) => {

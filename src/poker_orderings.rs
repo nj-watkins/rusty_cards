@@ -27,10 +27,10 @@ pub struct CardHash{
     suit_hash: HashMap<Suit, i8>,
 }
 
-pub fn hash_cards(cards:Vec<&Card>) -> CardHash {
-    let mut rank_hash: HashMap<i8, i8>;
-    let mut suit_hash: HashMap<Suit, i8>;
-    for card in &cards{
+pub fn hash_cards(cards:&Vec<&Card>) -> CardHash {
+    let mut rank_hash: HashMap<i8, i8> = Default::default();
+    let mut suit_hash: HashMap<Suit, i8> = Default::default();
+    for card in cards{
         // iterate over each card in the cards vector
         *rank_hash.entry(card.rank.clone()).or_insert(0) += 1;
         *suit_hash.entry(card.suit.clone()).or_insert(0) += 1;
@@ -114,7 +114,7 @@ fn flush_suit(card_hash: &CardHash) -> Result<Suit, &'static str> {
 }
 
 pub fn identify_hand_class(cards:Vec<&Card>) -> Result<HandClass, &'static str>{
-    let card_hash = hash_cards(cards);
+    let card_hash = hash_cards(&cards);
     // create a hash map of the cards to make hand identification easier
     let can_straight = is_hand_straightable(&card_hash);
     let can_flush = is_hand_flushable(&card_hash);
@@ -227,12 +227,23 @@ fn best_group_class(card_hash : &CardHash) -> Result<HandClass, &'static str>{
     }
 }
 
-fn create_hand_vector<'a>(player_hand: &'a PlayerHand, community: &'a Community) -> Vec<&'a Card>{
-    let mut hand_vector: Vec<&Card> = vec![];
-    hand_vector.extend(player_hand.collect_cards());
-    hand_vector.extend(community.collect_cards());
-    hand_vector
+// fn create_hand_vector(player_hand: & PlayerHand, community: &Community) -> Vec<Card>{
+//     let mut hand_vector: Vec<Card> = vec![];
+//     hand_vector.extend(player_hand.collect_cards());
+//     hand_vector.extend(community.collect_cards());
+//     hand_vector
+// }
+
+fn create_hand_vector<'a>(
+    player_hand: &'a PlayerHand,
+    community: &'a Community,
+) -> Vec<&'a Card> {
+    let mut collector: Vec<&Card> = Vec::new();
+    collector.extend(player_hand.collect_cards());
+    collector.extend(community.collect_cards());
+    collector
 }
+
 
 #[cfg(test)]
 mod tests {
