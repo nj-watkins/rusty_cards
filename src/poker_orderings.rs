@@ -210,11 +210,15 @@ fn straight_or_royal_flush(cards: Vec<&Card>, card_hash: &CardHash) -> Option<Ha
 fn best_group_class(card_hash : &CardHash) -> Result<HandClass, &'static str>{
     let mut max_count:i8 = 0;
     let mut next_max_count:i8 = 0;
+    // ^-- initialize two counters to assess the maximum card counts considered over ranks
     for &count in card_hash.rank_hash.values() {
-        if count > max_count {
-            max_count = count;
+        if count >= max_count {
+            // if the count is larger than the max count,
+            // move the current max count into the next max count 
+            // move the count into max count.
             next_max_count = max_count;
-        } else if count > next_max_count {
+            max_count = count;
+        } else if count >= next_max_count {
             next_max_count = count;
         }
     }
@@ -280,6 +284,6 @@ mod tests {
         let test_hand_two = (four_clubs, four_diamonds);
         let test_hand_twoone = create_hand_vector(&test_hand_two, &test_community_one);
         let test_handclass_twoone = identify_hand_class(test_hand_twoone);
-        assert_eq!(test_handclass_twoone, Ok(HandClass::TwoPair));
+        assert_eq!(test_handclass_twoone, Ok(HandClass::FullHouse));
     }
 }
