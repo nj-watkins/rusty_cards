@@ -139,6 +139,7 @@ pub fn identify_hand_class(cards:Vec<&Card>) -> Result<HandClass, &'static str>{
         // check if straight flush/royal flush
         let handclass = straight_or_royal_flush(cards, &card_hash);     
         if let Some(hand) = handclass  {
+
             return Ok(hand);
         }         
     }
@@ -181,17 +182,22 @@ fn straight_or_royal_flush(cards: Vec<&Card>, card_hash: &CardHash) -> Option<Ha
                                            .collect();
     //iterate over cards, use a closure (anonymous function) to filter down to the flush suit
     flush_cards.sort_by_key(|&card| card.rank); // sort the cards to check for a straight
-    let mut straight_counter:u8 = 0;
+    let mut straight_counter:u8 = 1;
     for window in flush_cards.windows(2) {
         if window[1].rank - window[0].rank == 1{
+            // if the difference between the lower rank card and the next 
+            // rank card is exactly 1, increment the straight counter
             straight_counter += 1;
         }
         else{
+            // if the difference is not exactly one, reset the straight counter
             straight_counter = 0;
         }
     }
     match straight_counter {
         4 => {
+            // if the straight_counter ended at exactly four and the lowest rank card is an Ace,
+            // then royal flush...
             if flush_cards[0].rank == 1 {
                 return Some(HandClass::RoyalFlush);
             }
