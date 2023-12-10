@@ -225,7 +225,9 @@ fn best_group_class(card_hash : &CardHash) -> Result<HandClass, &'static str>{
     match max_count {
         4 => Ok(HandClass::FourOfAKind),
         3 => match next_max_count {
+            // if the max count is 3, we have to cases
             2..=std::i8::MAX => Ok(HandClass::FullHouse),
+            // if next max count is 2, we have a Full House
             _ => Ok(HandClass::ThreeOfAKind),
         },
         2 => match next_max_count {
@@ -263,9 +265,12 @@ mod tests {
     fn test_card_hash() {
         let ace_hearts = Card{rank:1, suit: Hearts};
         let two_hearts = Card{rank:2, suit: Hearts};
+        let two_diamonds = Card{rank:2, suit: Diamonds};
         let three_hearts = Card{rank:3, suit: Hearts};
         let four_hearts = Card{rank:4, suit: Hearts};
         let five_hearts = Card{rank:5, suit: Hearts};
+        let five_clubs = Card{rank:5, suit: Clubs};
+        let six_clubs = Card{rank:6, suit:Clubs};
         let four_clubs = Card{rank:4, suit: Clubs};
         let four_diamonds = Card{rank:4, suit: Diamonds};
         let four_spades = Card{rank:4, suit: Spades};
@@ -285,5 +290,10 @@ mod tests {
         let test_hand_twoone = create_hand_vector(&test_hand_two, &test_community_one);
         let test_handclass_twoone = identify_hand_class(test_hand_twoone);
         assert_eq!(test_handclass_twoone, Ok(HandClass::FullHouse));
+
+        let test_hand_three = (two_diamonds, six_clubs);
+        let test_hand_threeone = create_hand_vector(&test_hand_three, &test_community_one);
+        let test_handclass_threeone = identify_hand_class(test_hand_threeone);
+        assert_eq!(test_handclass_threeone, Ok(HandClass::TwoPair));
     }
 }
